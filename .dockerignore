@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+db.sqlite3
+.jenkins/
+jenkins.war
+jenkins_17.war
+.vscode/

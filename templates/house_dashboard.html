@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .metric-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin: 0.5rem 0;
+    }
+
+    .alert-card {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 0.5rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #fca5a5;
+    }
+    
+    .alert-icon {
+        flex-shrink: 0;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    th {
+        color: var(--text-secondary);
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.05em;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .badge-normal {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--success);
+    }
+    
+    .badge-warning {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+    }
+</style>
+
+<div class="header-actions">
+    <div>
+        <h1>House Model Dashboard</h1>
+        <p class="text-secondary">Real-time monitoring and analytics</p>
+    </div>
+    <a href="{% url 'house_predict' %}" class="btn btn-primary">Make New Prediction</a>
+</div>
+
+{% if drift_alert %}
+<div class="alert-card">
+    <div class="alert-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    </div>
+    <div>
+        <h4 style="margin: 0 0 0.25rem 0; color: var(--danger);">Data Drift Detected</h4>
+        <p style="margin: 0; font-size: 0.875rem;">Unusual square footage (> 10000 or < 100) observed in recent predictions. Model performance may be degraded.</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="metrics-grid">
+    <div class="glass-card metric-card">
+        <span class="text-secondary">Total Predictions</span>
+        <span class="metric-value">{{ total_predictions }}</span>
+    </div>
+    <div class="glass-card metric-card">
+        <span class="text-secondary">Average Response Time</span>
+        <span class="metric-value">{{ avg_response_time }} <span style="font-size: 1rem; color: var(--text-secondary);">ms</span></span>
+    </div>
+</div>
+
+<div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="glass-card">
+        <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Price Trend</h3>
+        <canvas id="priceTrendChart"></canvas>
+    </div>
+    <div class="glass-card">
+        <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Sq.Ft vs Price</h3>
+        <canvas id="scatterChart"></canvas>
+    </div>
+    <div class="glass-card">
+        <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Response Time (ms)</h3>
+        <canvas id="responseTimeChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Common Chart Options for Dark Theme
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+
+    const chartLabels = JSON.parse('{{ chart_labels|escapejs }}');
+    const priceData = JSON.parse('{{ price_data|escapejs }}');
+    const responseTimes = JSON.parse('{{ response_times|escapejs }}');
+    const scatterData = JSON.parse('{{ scatter_data|escapejs }}');
+
+    // 1. Price Trend (Line Chart)
+    new Chart(document.getElementById('priceTrendChart'), {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Predicted Price ($)',
+                data: priceData,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        }
+    });
+
+    // 2. Sq.Ft vs Price (Scatter Chart)
+    new Chart(document.getElementById('scatterChart'), {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Sq.Ft vs Price',
+                data: scatterData,
+                backgroundColor: '#10b981'
+            }]
+        },
+        options: {
+            scales: {
+                x: { title: { display: true, text: 'Square Feet' } },
+                y: { title: { display: true, text: 'Predicted Price ($)' } }
+            }
+        }
+    });
+
+    // 3. Response Time (Bar Chart)
+    new Chart(document.getElementById('responseTimeChart'), {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Response Time (ms)',
+                data: responseTimes,
+                backgroundColor: '#8b5cf6',
+                borderRadius: 4
+            }]
+        }
+    });
+</script>
+
+<div class="glass-card">
+    <h3>Recent Predictions</h3>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Square Feet (Input)</th>
+                    <th>Predicted Price</th>
+                    <th>Response Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_logs %}
+                <tr>
+                    <td>{{ log.created_at|date:"M d, Y H:i:s" }}</td>
+                    <td>{{ log.square_feet }}</td>
+                    <td>${{ log.predicted_price|floatformat:2 }}</td>
+                    <td>{{ log.response_time_ms|floatformat:2 }} ms</td>
+                    <td>
+                        {% if log.square_feet > 10000 or log.square_feet < 100 %}
+                            <span class="badge badge-warning">Outlier</span>
+                        {% else %}
+                            <span class="badge badge-normal">Normal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">No predictions made yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .hero {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .hero h1 {
+        font-size: 2.5rem;
+        background: linear-gradient(to right, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .metric-card {
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .models-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .model-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .model-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .model-card p {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        flex-grow: 1;
+    }
+
+    .model-actions {
+        display: flex;
+        gap: 1rem;
+    }
+</style>
+
+<div class="hero">
+    <h1>Model Monitoring Dashboard</h1>
+    <p class="text-secondary">Centralized view for your deployed Machine Learning models.</p>
+</div>
+
+<div class="metrics-grid">
+    <div class="glass-card metric-card">
+        <div class="metric-value">{{ total_predictions }}</div>
+        <div class="metric-label">Total Predictions Served</div>
+    </div>
+    <div class="glass-card metric-card">
+        <div class="metric-value">{{ total_student_predictions }}</div>
+        <div class="metric-label">Student Model Requests</div>
+    </div>
+    <div class="glass-card metric-card">
+        <div class="metric-value">{{ total_house_predictions }}</div>
+        <div class="metric-label">House Model Requests</div>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 1.5rem;">Available Models</h2>
+<div class="models-grid">
+    <div class="glass-card model-card">
+        <h3>Student Marks Predictor</h3>
+        <p>Predicts student final marks based on their study hours. Monitors for data drift if study hours exceed realistic ranges.</p>
+        <div class="model-actions">
+            <a href="{% url 'student_predict' %}" class="btn btn-primary">Make Prediction</a>
+            <a href="{% url 'student_dashboard' %}" class="btn btn-outline">View Dashboard</a>
+        </div>
+    </div>
+
+    <div class="glass-card model-card">
+        <h3>House Price Predictor</h3>
+        <p>Predicts real estate prices based on total square footage. Includes real-time response monitoring and anomaly detection.</p>
+        <div class="model-actions">
+            <a href="{% url 'house_predict' %}" class="btn btn-primary">Make Prediction</a>
+            <a href="{% url 'house_dashboard' %}" class="btn btn-outline">View Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

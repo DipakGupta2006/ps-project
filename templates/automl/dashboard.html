@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+    }
+    
+    .models-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+
+    .model-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .model-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .model-info {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .model-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: auto;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-state h2 {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+</style>
+
+<div class="header-section">
+    <div>
+        <h1>Global Models Dashboard</h1>
+        <p class="text-secondary">View and monitor all your automatically trained Scikit-Learn models.</p>
+    </div>
+    <a href="{% url 'build_model' %}" class="btn btn-primary">Train New Model</a>
+</div>
+
+{% if models %}
+<div class="models-grid">
+    {% for model in models %}
+    <div class="glass-card model-card">
+        <h3>{{ model.model_name }}</h3>
+        <div class="model-info">
+            <p><strong>Target:</strong> {{ model.target_column }}</p>
+            <p><strong>Features:</strong> {{ model.feature_columns|length }} columns</p>
+            <p><strong>Created:</strong> {{ model.created_at|date:"M d, Y" }}</p>
+        </div>
+        <div class="model-actions">
+            <a href="{% url 'predict' model.model_name %}" class="btn btn-primary" style="flex: 1;">Predict</a>
+            <a href="{% url 'monitor' model.model_name %}" class="btn btn-outline" style="flex: 1;">Monitor</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-card empty-state">
+    <h2>No models trained yet</h2>
+    <p class="text-secondary" style="margin-bottom: 2rem;">Upload a CSV dataset to train your first model automatically.</p>
+    <a href="{% url 'build_model' %}" class="btn btn-primary">Go to Model Builder</a>
+</div>
+{% endif %}
+{% endblock %}

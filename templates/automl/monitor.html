@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .metric-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin: 0.5rem 0;
+    }
+
+    .alert-card {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 0.5rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #fca5a5;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    th {
+        color: var(--text-secondary);
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.05em;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+</style>
+
+<div class="header-actions">
+    <div>
+        <a href="{% url 'dashboard' %}" class="text-secondary" style="text-decoration: none; display: inline-block; margin-bottom: 0.5rem;">&larr; Back to Dashboard</a>
+        <h1>Monitor: {{ model.model_name }}</h1>
+        <p class="text-secondary">Target Variable: {{ model.target_column }}</p>
+    </div>
+    <a href="{% url 'predict' model.model_name %}" class="btn btn-primary">Go to Prediction</a>
+</div>
+
+{% if drift_alert %}
+<div class="alert-card">
+    <div>
+        <h4 style="margin: 0 0 0.25rem 0; color: var(--danger);">Performance Warning</h4>
+        <p style="margin: 0; font-size: 0.875rem;">Average response time is very high (> 500ms) or unexpected outputs detected. Check model health.</p>
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="metrics-grid">
+    <div class="glass-card metric-card">
+        <span class="text-secondary">Total Predictions</span>
+        <span class="metric-value">{{ total_predictions }}</span>
+    </div>
+    <div class="glass-card metric-card">
+        <span class="text-secondary">Average Latency</span>
+        <span class="metric-value">{{ avg_response_time }} <span style="font-size: 1rem; color: var(--text-secondary);">ms</span></span>
+    </div>
+</div>
+
+<div class="glass-card" style="margin-bottom: 2rem;">
+    <h3>Latency Monitor (Last 20 Predictions)</h3>
+    <canvas id="latencyChart" height="80"></canvas>
+</div>
+
+<div class="glass-card">
+    <h3>Recent Inference Logs</h3>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Prediction</th>
+                    <th>Latency</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_logs %}
+                <tr>
+                    <td>{{ log.timestamp|date:"M d, Y H:i:s" }}</td>
+                    <td style="font-weight: bold; color: var(--success);">{{ log.prediction_result }}</td>
+                    <td>{{ log.response_time_ms|floatformat:2 }} ms</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: var(--text-secondary);">No predictions logged yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const ctx = document.getElementById('latencyChart').getContext('2d');
+    const latencyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Response Time (ms)',
+                data: {{ chart_data|safe }},
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: '#94a3b8' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#f8fafc' } }
+            }
+        }
+    });
+</script>
+{% endblock %}

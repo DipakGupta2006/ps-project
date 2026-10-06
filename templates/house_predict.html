@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .form-container {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    
+    input[type="number"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--glass-border);
+        color: white;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+    
+    input[type="number"]:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    
+    .result-card {
+        margin-top: 2rem;
+        text-align: center;
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.2);
+    }
+    
+    .result-value {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--success);
+        margin: 1rem 0;
+    }
+    
+    .meta-info {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        display: flex;
+        justify-content: space-between;
+        border-top: 1px solid var(--glass-border);
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+
+    .error-msg {
+        color: var(--danger);
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 0.5rem;
+    }
+</style>
+
+<div class="form-container">
+    <div class="glass-card">
+        <h2>House Price Predictor</h2>
+        <p class="text-secondary" style="margin-bottom: 2rem;">Enter total square footage to predict the house price.</p>
+        
+        {% if error %}
+        <div class="error-msg">{{ error }}</div>
+        {% endif %}
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="square_feet">Square Feet</label>
+                <input type="number" step="0.1" name="square_feet" id="square_feet" required placeholder="e.g., 1500">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Predict Price</button>
+        </form>
+    </div>
+
+    {% if predicted_price %}
+    <div class="glass-card result-card">
+        <p class="text-secondary">Predicted Price</p>
+        <div class="result-value">${{ predicted_price }}</div>
+        
+        <div class="meta-info">
+            <span>Input: {{ square_feet }} sqft</span>
+            <span>Response Time: {{ response_time_ms }} ms</span>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

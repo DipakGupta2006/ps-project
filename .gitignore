@@ -1,0 +1,20 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+
+# Django
+db.sqlite3
+
+# Jenkins
+.jenkins/
+jenkins.war
+jenkins_17.war
+
+# VS Code / Environment
+.vscode/
+.env
