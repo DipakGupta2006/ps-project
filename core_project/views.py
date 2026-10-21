@@ -6,7 +6,7 @@ def home(request):
     total_student_predictions = StudentLog.objects.count()
     total_house_predictions = HouseLog.objects.count()
     total_predictions = total_student_predictions + total_house_predictions
-    
+    # Testing automatic Jenkins CI/CD trigger
     context = {
         'total_predictions': total_predictions,
         'total_student_predictions': total_student_predictions,
