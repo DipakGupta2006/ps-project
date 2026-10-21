@@ -6,6 +6,8 @@ class TrainedModel(models.Model):
     feature_columns = models.JSONField()
     target_column = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+    dataset_file_path = models.CharField(max_length=500, blank=True, null=True)
+    dataset_stats = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return self.model_name

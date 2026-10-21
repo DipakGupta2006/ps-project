@@ -8,6 +8,7 @@ from .models import TrainedModel, PredictionLog
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from django.db.models import Avg
+from .stats import compute_dataset_stats
 
 def build_model(request):
     if request.method == 'POST':
@@ -53,11 +54,22 @@ def build_model(request):
         pkl_path = os.path.join(models_dir, f"{model_name}.pkl")
         joblib.dump(clf, pkl_path)
         
+        # Save original dataset
+        datasets_dir = os.path.join(settings.BASE_DIR, 'saved_datasets')
+        os.makedirs(datasets_dir, exist_ok=True)
+        dataset_path = os.path.join(datasets_dir, f"{model_name}.csv")
+        df.to_csv(dataset_path, index=False)
+
+        # Compute Pandas statistical summary
+        stats = compute_dataset_stats(df, target_col=target_col)
+
         TrainedModel.objects.create(
             model_name=model_name,
             pkl_file_path=pkl_path,
             feature_columns=final_feature_cols,
-            target_column=target_col
+            target_column=target_col,
+            dataset_file_path=dataset_path,
+            dataset_stats=stats,
         )
         return redirect('dashboard')
         
@@ -128,7 +140,18 @@ def monitor(request, model_name):
     logs_for_chart = list(recent_logs[:20])
     chart_labels = [log.timestamp.strftime("%H:%M:%S") for log in reversed(logs_for_chart)]
     chart_data = [log.response_time_ms for log in reversed(logs_for_chart)]
-        
+
+    # Fetch dataset statistics
+    dataset_stats = model_obj.dataset_stats
+    if not dataset_stats and model_obj.dataset_file_path and os.path.exists(model_obj.dataset_file_path):
+        try:
+            df = pd.read_csv(model_obj.dataset_file_path)
+            dataset_stats = compute_dataset_stats(df, target_col=model_obj.target_column)
+            model_obj.dataset_stats = dataset_stats
+            model_obj.save(update_fields=['dataset_stats'])
+        except Exception:
+            dataset_stats = None
+
     context = {
         'model': model_obj,
         'total_predictions': total_predictions,
@@ -136,6 +159,8 @@ def monitor(request, model_name):
         'recent_logs': recent_logs,
         'drift_alert': drift_alert,
         'chart_labels': chart_labels,
-        'chart_data': chart_data
+        'chart_data': chart_data,
+        'dataset_stats': dataset_stats,
     }
     return render(request, 'automl/monitor.html', context)
+

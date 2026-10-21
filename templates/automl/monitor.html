@@ -129,6 +129,144 @@
     </div>
 </div>
 
+<div class="glass-card" style="margin-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h3 style="margin-bottom: 0.25rem;">📊 Dataset Statistical Analysis (Pandas)</h3>
+            <p class="text-secondary" style="margin: 0; font-size: 0.875rem;">Calculated directly from the training dataset using Pandas (min, max, mean/avg, standard deviation, median, quartiles).</p>
+        </div>
+        {% if dataset_stats.overview %}
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <span style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.825rem; font-weight: 500;">
+                <strong>{{ dataset_stats.overview.total_rows }}</strong> Rows
+            </span>
+            <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.825rem; font-weight: 500;">
+                <strong>{{ dataset_stats.overview.total_columns }}</strong> Columns
+            </span>
+            <span style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: #c4b5fd; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.825rem; font-weight: 500;">
+                <strong>{{ dataset_stats.overview.numeric_count }}</strong> Numeric Features
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if dataset_stats.numeric_stats %}
+    <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem; color: #94a3b8; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em;">
+        Numerical Features (Summary Metrics)
+    </h4>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Count</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th>Average (Mean)</th>
+                    <th>Std Deviation</th>
+                    <th>Median (50%)</th>
+                    <th>25% (Q1)</th>
+                    <th>75% (Q3)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in dataset_stats.numeric_stats %}
+                <tr>
+                    <td style="font-weight: 600; color: #f8fafc;">{{ stat.column }}</td>
+                    <td>{{ stat.count }}</td>
+                    <td style="color: #60a5fa; font-weight: 500;">{{ stat.min }}</td>
+                    <td style="color: #f43f5e; font-weight: 500;">{{ stat.max }}</td>
+                    <td style="color: #34d399; font-weight: 600;">{{ stat.avg }}</td>
+                    <td style="color: #fbbf24;">{{ stat.std }}</td>
+                    <td>{{ stat.median }}</td>
+                    <td style="color: #94a3b8;">{{ stat.q25 }}</td>
+                    <td style="color: #94a3b8;">{{ stat.q75 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if dataset_stats.categorical_stats %}
+    <h4 style="margin-top: 2rem; margin-bottom: 0.75rem; color: #94a3b8; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em;">
+        Categorical Features
+    </h4>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Count</th>
+                    <th>Unique Values</th>
+                    <th>Most Frequent (Mode)</th>
+                    <th>Top Value Frequency</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in dataset_stats.categorical_stats %}
+                <tr>
+                    <td style="font-weight: 600; color: #f8fafc;">{{ stat.column }}</td>
+                    <td>{{ stat.count }}</td>
+                    <td style="color: #a78bfa; font-weight: 500;">{{ stat.unique }}</td>
+                    <td style="color: #38bdf8; font-weight: 500;">{{ stat.top_value }}</td>
+                    <td style="color: #94a3b8;">{{ stat.top_freq }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if dataset_stats.target_info %}
+    <h4 style="margin-top: 2rem; margin-bottom: 0.75rem; color: #94a3b8; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em;">
+        Target Variable Analysis: <span style="color: #38bdf8;">{{ dataset_stats.target_info.name }}</span>
+    </h4>
+    {% if dataset_stats.target_info.type == 'Numeric' %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Target Variable</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th>Average (Mean)</th>
+                    <th>Std Deviation</th>
+                    <th>Median</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-weight: 600; color: #f8fafc;">{{ dataset_stats.target_info.name }}</td>
+                    <td style="color: #60a5fa;">{{ dataset_stats.target_info.min }}</td>
+                    <td style="color: #f43f5e;">{{ dataset_stats.target_info.max }}</td>
+                    <td style="color: #34d399; font-weight: 600;">{{ dataset_stats.target_info.avg }}</td>
+                    <td style="color: #fbbf24;">{{ dataset_stats.target_info.std }}</td>
+                    <td>{{ dataset_stats.target_info.median }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem;">
+        {% for item in dataset_stats.target_info.distribution %}
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border); border-radius: 0.5rem; padding: 0.75rem 1.25rem; display: flex; flex-direction: column;">
+            <span style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Class: {{ item.label }}</span>
+            <span style="font-size: 1.25rem; font-weight: 700; color: var(--accent-color);">{{ item.count }} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-secondary);">instances</span></span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% if not dataset_stats %}
+    <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+        <p style="margin: 0;">No dataset statistical summary available for this model yet. When training new models, statistics are computed automatically from the uploaded CSV dataset.</p>
+    </div>
+    {% endif %}
+</div>
+
+
 <script>
     const ctx = document.getElementById('latencyChart').getContext('2d');
     const latencyChart = new Chart(ctx, {
