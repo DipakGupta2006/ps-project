@@ -1,5 +1,6 @@
 
 
+
 pipeline {
     agent any
 
@@ -24,19 +25,20 @@ pipeline {
         }
 
         stage('Deploy Dashboard') {
-    steps {
-        bat '''
-            docker rm -f model-dashboard 2>NUL
-            docker run -d --restart unless-stopped --name model-dashboard -p 8002:8000 -e DB_PATH=/data/db.sqlite3 -v model-dashboard-data:/data my-dashboard-app
-            if errorlevel 1 exit /b 1
+            steps {
+                bat '''
+                    docker rm -f model-dashboard 2>NUL
+                    docker run -d --restart unless-stopped --name model-dashboard -p 8002:8000 -e DB_PATH=/data/db.sqlite3 -v model-dashboard-data:/data my-dashboard-app
+                    if errorlevel 1 exit /b 1
 
-            powershell -NoProfile -Command "Start-Sleep -Seconds 5"
+                    powershell -NoProfile -Command "Start-Sleep -Seconds 5"
 
-            powershell -NoProfile -Command "if ((docker inspect model-dashboard --format='{{.State.Running}}') -eq 'true') { exit 0 } else { exit 1 }"
-            if errorlevel 1 exit /b 1
-        '''
+                    powershell -NoProfile -Command "$c = docker inspect model-dashboard | ConvertFrom-Json; if ($c[0].State.Running) { Write-Host 'Container is running'; exit 0 } else { Write-Error 'Container is not running'; exit 1 }"
+                    if errorlevel 1 exit /b 1
+                '''
+            }
+        }
     }
-}
 
     post {
         success {
