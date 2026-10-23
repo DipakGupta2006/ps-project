@@ -32,8 +32,8 @@ pipeline {
 
                     powershell -NoProfile -Command "Start-Sleep -Seconds 5"
 
-                    docker ps --filter "name=^/model-dashboard$" --filter "status=running" --format "{{.Names}}" | findstr /x "model-dashboard"
-                    if errorlevel 1 exit /b 1
+                    docker inspect -f "{{.State.Running}}" model-dashboard | findstr /x "true"
+if errorlevel 1 exit /b 1
                 '''
             }
         }
