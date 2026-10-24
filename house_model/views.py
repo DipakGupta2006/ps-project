@@ -1,7 +1,10 @@
 import time
+# hjgg
 from django.shortcuts import render
 from django.db.models import Avg
 from .models import HouseLog
+
+
 
 def predict_price(request):
     context = {}
